@@ -21,16 +21,18 @@ app.post("/todos", (req, res) => {
     text: req.body.text
   });
 
-  todo.save().then(
-    doc => {
-      res.send(doc);
-    },
-    e => {
-      res.status(400).send(e);
-    }
-  );
+  todo
+    .save()
+    .then(result => {
+      res.send(result);
+    })
+    .catch(err => {
+      res.status(400).send(err);
+    });
 });
 
 app.listen(3000, () => {
   console.log("App listening on port 3000!");
 });
+
+export { app };

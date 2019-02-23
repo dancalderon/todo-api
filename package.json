@@ -5,7 +5,8 @@
   "main": "index.js",
   "module": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha -r esm server/**/*.test.js",
+    "test-watch": "nodemon --exec \"npm test\""
   },
   "author": "",
   "license": "ISC",
@@ -15,5 +16,11 @@
     "express": "^4.16.4",
     "mongodb": "^3.1.13",
     "mongoose": "^5.4.14"
+  },
+  "devDependencies": {
+    "expect": "^24.1.0",
+    "mocha": "^6.0.1",
+    "nodemon": "^1.18.10",
+    "supertest": "^3.4.2"
   }
 }
