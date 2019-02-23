@@ -4,6 +4,7 @@ import bodyParser from "body-parser";
 import { mongoose } from "./db/mongoose";
 import { Todo } from "./models/todo";
 import { User } from "./models/user";
+import { ObjectID } from "mongodb";
 
 const app = express();
 //use the bodyParser as a middleware
@@ -44,6 +45,22 @@ app.get("/todos", (req, res) => {
     .catch(err => {
       res.send(err);
     });
+});
+//
+//:id will create an object params = { id: id used in the GET}
+app.get("/todos/:id", (req, res) => {
+  const id = req.params.id;
+  if (!ObjectID.isValid(id)) {
+    return res.status(404).send();
+  } else {
+    Todo.findById(id)
+      .then(result => {
+        res.send(result);
+      })
+      .catch(err => {
+        res.status(400).send(`404 not found`);
+      });
+  }
 });
 
 app.listen(3000, () => {
