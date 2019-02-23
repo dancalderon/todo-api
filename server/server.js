@@ -31,6 +31,21 @@ app.post("/todos", (req, res) => {
     });
 });
 
+app.get("/todos", (req, res) => {
+  Todo.find()
+    .then(todos => {
+      //find will return an array, in order to add more keys and values
+      //the best option is pass the result as an object with es6
+      res.send({
+        todos
+        // code: "adding a new key and value"
+      });
+    })
+    .catch(err => {
+      res.send(err);
+    });
+});
+
 app.listen(3000, () => {
   console.log("App listening on port 3000!");
 });
