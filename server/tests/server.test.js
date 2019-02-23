@@ -4,10 +4,20 @@ import { app } from "./../server";
 import { Todo } from "./../models/todo";
 import { User } from "./../models/user";
 //runes somecode before every single test
+
+//Creates a todos array of objects to be added
+const todos = [
+  {
+    text: "First test todo"
+  },
+  {
+    text: "second test todo"
+  }
+];
 beforeEach(done => {
-  //this will remove all our todos
-  //is an async functions, so we must use done to end the operation
-  Todo.remove({}).then(() => done());
+  Todo.remove({}) // removes all the todos
+    .then(() => Todo.insertMany(todos)) //insert the todos objects
+    .then(() => done());
 });
 
 //creates a describe "folder"
@@ -31,7 +41,7 @@ describe("POST /todos", () => {
       .end((err, res) => {
         if (err) return done(err);
         //finds all the Todo's adn return a promise with them
-        Todo.find()
+        Todo.find({ text }) //we search specifically this object
           .then(result => {
             expect(result.length).toBe(1);
             expect(result[0].text).toBe(text);
@@ -41,7 +51,7 @@ describe("POST /todos", () => {
       });
   });
 
-  it("Should note create todo with invalid body data", done => {
+  it("Should not create todo with invalid body data", done => {
     request(app)
       .post("/todos")
       .send({})
@@ -53,12 +63,25 @@ describe("POST /todos", () => {
 
         Todo.find()
           .then(result => {
-            expect(result.length).toBe(0);
+            //we have 2 todos from the todos instert
+            expect(result.length).toBe(2);
             done();
           })
           .catch(err => {
             done(err);
           });
       });
+  });
+});
+
+describe("GET /todos", () => {
+  it("Should get all todos", done => {
+    request(app)
+      .get("/todos")
+      .expect(200)
+      .expect(res => {
+        expect(res.body.todos.length).toBe(2);
+      })
+      .end(done);
   });
 });
