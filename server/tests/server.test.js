@@ -3,14 +3,18 @@ import request from "supertest";
 import { app } from "./../server";
 import { Todo } from "./../models/todo";
 import { User } from "./../models/user";
+import { ObjectID } from "mongodb";
+
 //runes somecode before every single test
 
 //Creates a todos array of objects to be added
 const todos = [
   {
+    _id: new ObjectID(),
     text: "First test todo"
   },
   {
+    _id: new ObjectID(),
     text: "second test todo"
   }
 ];
@@ -82,6 +86,33 @@ describe("GET /todos", () => {
       .expect(res => {
         expect(res.body.todos.length).toBe(2);
       })
+      .end(done);
+  });
+});
+
+describe("GET /todos/:id", () => {
+  it("Should return todo doc", done => {
+    request(app)
+      //toHexString will convert the ObjectID into a String
+      .get(`/todos/${todos[0]._id.toHexString()}`)
+      .expect(200)
+      .expect(res => {
+        // here 'todo' is the object that we sent in the server
+        expect(res.body.todo.text).toBe(todos[0].text);
+      })
+      .end(done);
+  });
+  it(`"Should return 404 if todo not found"`, done => {
+    const hexID = new ObjectID().toHexString();
+    request(app)
+      .get(`/todos/${"5c71e55b3ababe21d074ec9a"}`)
+      .expect(404)
+      .end(done);
+  });
+  it("Should return 404 for non-object ids", done => {
+    request(app)
+      .get(`/todos/123`)
+      .expect(404)
       .end(done);
   });
 });
