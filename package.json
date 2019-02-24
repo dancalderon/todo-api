@@ -5,6 +5,7 @@
   "main": "index.js",
   "module": "main.js",
   "scripts": {
+    "start": "node -r esm server/server.js",
     "test": "mocha -r esm server/**/*.test.js",
     "test-watch": "nodemon --exec \"npm test\""
   },

@@ -7,15 +7,9 @@ import { User } from "./models/user";
 import { ObjectID } from "mongodb";
 
 const app = express();
-//use the bodyParser as a middleware
-//middleware is a 'filter' or 'handler' between the req and the res
-//in this case, we will format our res to JSON
 
+const port = process.env.PORT || 3000;
 app.use(bodyParser.json());
-
-//This will send a JSON.object with some text on import PropTypes from 'prop-types'
-//the server will take this object, extract the text, create a new model
-//and will return a new complete model to the client
 
 app.post("/todos", (req, res) => {
   const todo = new Todo({
@@ -35,36 +29,30 @@ app.post("/todos", (req, res) => {
 app.get("/todos", (req, res) => {
   Todo.find()
     .then(todos => {
-      //find will return an array, in order to add more keys and values
-      //the best option is pass the result as an object with es6
       res.send({
         todos
-        // code: "adding a new key and value"
       });
     })
     .catch(err => {
       res.send(err);
     });
 });
-//
-//:id will create an object params = { id: id used in the GET}
 app.get("/todos/:id", (req, res) => {
   const id = req.params.id;
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
-  } else {
-    Todo.findById(id)
-      .then(result => {
-        res.send(result);
-      })
-      .catch(err => {
-        res.status(400).send(`404 not found`);
-      });
   }
+  Todo.findById(id)
+    .then(todo => {
+      !todo ? res.status(404).send() : res.send({ todo });
+    })
+    .catch(err => {
+      res.status(400).send(`404 not found`);
+    });
 });
 
-app.listen(3000, () => {
-  console.log("App listening on port 3000!");
+app.listen(port, () => {
+  console.log(`Started up at port ${port}!`);
 });
 
 export { app };
