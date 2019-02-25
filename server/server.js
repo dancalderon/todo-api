@@ -71,12 +71,6 @@ app.patch("/todos/:id", (req, res) => {
     .catch(err => res.status(400).send());
 });
 
-app.get("/users", (req, res) => {
-  User.find()
-    .then(users => res.send({ users }))
-    .catch(err => res.send(err));
-});
-
 app.post("/users", (req, res) => {
   const body = _.pick(req.body, ["email", "password"]);
   const user = new User({
