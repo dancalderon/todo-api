@@ -53,13 +53,9 @@ app.delete("/todos/:id", (req, res) => {
 
 app.patch("/todos/:id", (req, res) => {
   const id = req.params.id;
-  //pick will take an object and will take the properties that we passed, if they exist
-  //this returns an object
   const body = _.pick(req.body, ["text", "completed"]);
 
   if (!ObjectID.isValid(id)) return res.status(404).send();
-
-  //type of 'boolean' and completed = true
   if (_.isBoolean(body.completed) && body.completed) {
     body.completedAt = new Date().getTime();
   } else {
@@ -73,6 +69,25 @@ app.patch("/todos/:id", (req, res) => {
       res.send({ todo });
     })
     .catch(err => res.status(400).send());
+});
+
+app.get("/users", (req, res) => {
+  User.find()
+    .then(users => res.send({ users }))
+    .catch(err => res.send(err));
+});
+
+app.post("/users", (req, res) => {
+  const body = _.pick(req.body, ["email", "password"]);
+  const user = new User({
+    email: body.email,
+    password: body.password
+  });
+
+  user
+    .save()
+    .then(result => res.send(result))
+    .catch(err => res.status(400).send(err));
 });
 
 app.listen(port, () => console.log(`Started up at port ${port}!`));

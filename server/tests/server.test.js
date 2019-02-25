@@ -5,9 +5,6 @@ import { Todo } from "./../models/todo";
 import { User } from "./../models/user";
 import { ObjectID } from "mongodb";
 
-//runes somecode before every single test
-
-//Creates a todos array of objects to be added
 const todos = [
   {
     _id: new ObjectID(),
@@ -21,34 +18,22 @@ const todos = [
   }
 ];
 beforeEach(done => {
-  Todo.remove({}) // removes all the todos
-    .then(() => Todo.insertMany(todos)) //insert the todos objects
+  Todo.remove({})
+    .then(() => Todo.insertMany(todos))
     .then(() => done());
 });
 
-//creates a describe "folder"
 describe("POST /todos", () => {
-  //test the async function - done
   it("Should create a new todo", done => {
-    //test input
     const text = "Test text";
-    //calls the app with supertest
     request(app)
-      //calls the post method into "/todos"
       .post("/todos")
-      //sends the request
       .send({ text })
-      //assertions about the request
-      //.expect = supertest / expect = expect
-      //expects for the response
       .expect(200)
       .expect(res => expect(res.body.text).toBe(text))
-      //.end allways creates an anfn with err and res as arguments
-      //end with an anfn allows to check the response before been sent it
       .end((err, res) => {
         if (err) return done(err);
-        //finds all the Todo's adn return a promise with them
-        Todo.find({ text }) //we search specifically this object
+        Todo.find({ text })
           .then(result => {
             expect(result.length).toBe(1);
             expect(result[0].text).toBe(text);
@@ -64,19 +49,14 @@ describe("POST /todos", () => {
       .send({})
       .expect(400)
       .end((err, res) => {
-        if (err) {
-          return done(err);
-        }
+        if (err) return done(err);
 
         Todo.find()
           .then(result => {
-            //we have 2 todos from the todos instert
             expect(result.length).toBe(2);
             done();
           })
-          .catch(err => {
-            done(err);
-          });
+          .catch(err => done(err));
       });
   });
 });
@@ -86,9 +66,7 @@ describe("GET /todos", () => {
     request(app)
       .get("/todos")
       .expect(200)
-      .expect(res => {
-        expect(res.body.todos.length).toBe(2);
-      })
+      .expect(res => expect(res.body.todos.length).toBe(2))
       .end(done);
   });
 });
@@ -96,13 +74,9 @@ describe("GET /todos", () => {
 describe("GET /todos/:id", () => {
   it("Should return todo doc", done => {
     request(app)
-      //toHexString will convert the ObjectID into a String
       .get(`/todos/${todos[0]._id.toHexString()}`)
       .expect(200)
-      .expect(res => {
-        // here 'todo' is the object that we sent in the server
-        expect(res.body.todo.text).toBe(todos[0].text);
-      })
+      .expect(res => expect(res.body.todo.text).toBe(todos[0].text))
       .end(done);
   });
   it(`"Should return 404 if todo not found"`, done => {
@@ -126,12 +100,10 @@ describe("DELETE /todos/:id", () => {
       .delete(`/todos/${hexID}`)
       .expect(200)
       .expect(res => expect(res.body.todo._id).toBe(hexID))
-      //checks if not only we got a 200, but also the todo was removed
       .end((err, res) => {
         if (err) return done(err);
         Todo.findById(hexID)
           .then(result => {
-            //expects the find results falsy, meaning the todo was removed
             expect(result).not.toBeTruthy();
             done();
           })
@@ -159,7 +131,6 @@ describe("PATCH /todos/:id", () => {
     const text = "kira is the best";
     request(app)
       .patch(`/todos/${hexId}`)
-      //sent an obj with text and completed
       .send({ text, completed: true })
       .expect(200)
       .expect(res => {
