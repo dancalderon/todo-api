@@ -42,6 +42,7 @@ describe("POST /todos", () => {
       .expect(200)
       .expect(res => expect(res.body.text).toBe(text))
       //.end allways creates an anfn with err and res as arguments
+      //end with an anfn allows to check the response before been sent it
       .end((err, res) => {
         if (err) return done(err);
         //finds all the Todo's adn return a promise with them
@@ -112,6 +113,39 @@ describe("GET /todos/:id", () => {
   it("Should return 404 for non-object ids", done => {
     request(app)
       .get(`/todos/123`)
+      .expect(404)
+      .end(done);
+  });
+});
+describe("DELETE /todos/:id", () => {
+  it("Should remove a todo", done => {
+    const hexID = todos[1]._id.toHexString();
+    request(app)
+      .delete(`/todos/${hexID}`)
+      .expect(200)
+      .expect(res => expect(res.body.todo._id).toBe(hexID))
+      //checks if not only we got a 200, but also the todo was removed
+      .end((err, res) => {
+        if (err) return done(err);
+        Todo.findById(hexID)
+          .then(result => {
+            //expects the find results falsy, meaning the todo was removed
+            expect(result).not.toBeTruthy();
+            done();
+          })
+          .catch(err => done(err));
+      });
+  });
+  it("Should return 404 if todo not found", done => {
+    const hexID = new ObjectID();
+    request(app)
+      .delete(`/todos/${hexID}`)
+      .expect(404)
+      .end(done);
+  });
+  it("Should return 404 if Object ID is invalid", done => {
+    request(app)
+      .delete(`/todos/1125`)
       .expect(404)
       .end(done);
   });
