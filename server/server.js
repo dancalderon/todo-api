@@ -1,3 +1,5 @@
+const env = process.env.NODE_ENV || "development";
+
 import express from "express";
 import bodyParser from "body-parser";
 
@@ -8,7 +10,7 @@ import { ObjectID } from "mongodb";
 import _ from "lodash";
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 app.use(bodyParser.json());
 
 app.post("/todos", (req, res) => {
@@ -40,9 +42,7 @@ app.get("/todos/:id", (req, res) => {
 app.delete("/todos/:id", (req, res) => {
   const id = req.params.id;
 
-  if (!ObjectID.isValid(id)) {
-    return res.status(404).send();
-  }
+  if (!ObjectID.isValid(id)) return res.status(404).send();
 
   Todo.findByIdAndRemove(id)
     .then(todo =>
@@ -57,9 +57,8 @@ app.patch("/todos/:id", (req, res) => {
   //this returns an object
   const body = _.pick(req.body, ["text", "completed"]);
 
-  if (!ObjectID.isValid(id)) {
-    return res.status(404).send();
-  }
+  if (!ObjectID.isValid(id)) return res.status(404).send();
+
   //type of 'boolean' and completed = true
   if (_.isBoolean(body.completed) && body.completed) {
     body.completedAt = new Date().getTime();
@@ -67,12 +66,8 @@ app.patch("/todos/:id", (req, res) => {
     body.completed = false;
     body.completedAt = null;
   }
-  //fins the item by id, declares what update will be make it and options
-  //$set will take the body object, and set the todo values as the body values
-  // in this case todo.completed = body.complited, and todo.text = body.text
-  //new: true is the option to return the new object, not the modified old version
+
   Todo.findByIdAndUpdate(id, { $set: body }, { new: true })
-    //returns a promise, so we handle it
     .then(todo => {
       if (!todo) return res.status(404).send();
       res.send({ todo });
@@ -80,8 +75,6 @@ app.patch("/todos/:id", (req, res) => {
     .catch(err => res.status(400).send());
 });
 
-app.listen(port, () => {
-  console.log(`Started up at port ${port}!`);
-});
+app.listen(port, () => console.log(`Started up at port ${port}!`));
 
-export { app };
+export { app, env };
