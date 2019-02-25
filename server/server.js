@@ -70,7 +70,9 @@ app.patch("/todos/:id", (req, res) => {
   //fins the item by id, declares what update will be make it and options
   //$set will take the body object, and set the todo values as the body values
   // in this case todo.completed = body.complited, and todo.text = body.text
+  //new: true is the option to return the new object, not the modified old version
   Todo.findByIdAndUpdate(id, { $set: body }, { new: true })
+    //returns a promise, so we handle it
     .then(todo => {
       if (!todo) return res.status(404).send();
       res.send({ todo });
