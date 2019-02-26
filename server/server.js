@@ -86,16 +86,13 @@ app.post("/users", (req, res) => {
   user
     .save()
     .then(() => user.generateAuthToken())
-    .then(token =>
-      res.header("x-auth", token).send({ _id: user.id, email: user.email })
-    )
+    .then(token => res.header("x-auth", token).send(user))
     .catch(err => res.status(400).send(err));
 });
 
 //GET /users/me
 app.get("/users/me", authenticate, (req, res) => {
-  //we will sent only the user _id and email
-  res.send({ _id: req.user.id, email: req.user.email });
+  res.send(req.user);
 });
 
 //CONNECT TO THE PORT

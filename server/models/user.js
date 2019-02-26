@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import validator from "validator";
 import jwt from "jsonwebtoken";
+import _ from "lodash";
+import bcrypt from "bcryptjs";
 
 const UserSchema = new mongoose.Schema({
   email: {
@@ -32,6 +34,13 @@ const UserSchema = new mongoose.Schema({
     }
   ]
 });
+
+UserSchema.methods.toJSON = function() {
+  const user = this;
+  const userObject = user.toObject();
+  return _.pick(userObject, ["_id", "email"]);
+};
+
 UserSchema.methods.generateAuthToken = function() {
   const user = this;
   const access = "auth";
@@ -45,11 +54,10 @@ UserSchema.methods.generateAuthToken = function() {
     return token;
   });
 };
-//instance method
+
 UserSchema.statics.findByToken = function(token) {
   const User = this;
   let decoded;
-  //try catch runes some code, and if there's an err, it will catch it and continue
   try {
     decoded = jwt.verify(token, "abc123");
   } catch (e) {
@@ -58,11 +66,24 @@ UserSchema.statics.findByToken = function(token) {
 
   return User.findOne({
     _id: decoded._id,
-    //we uses quotes to acces to a nested value
     "tokens.token": token,
     "tokens.access": "auth"
   });
 };
+
+//middleware that will run some code before the event
+UserSchema.pre("save", function(next) {
+  const user = this;
+  //to avoid hash a passwoard that was already hashed we can check if this was modified
+  if (user.isModified("password")) {
+    bcrypt.genSalt(10, (err, salt) => {
+      bcrypt.hash(user.password, salt, (err, hash) => {
+        user.password = hash;
+        next();
+      });
+    });
+  } else next();
+});
 
 const User = mongoose.model("User", UserSchema);
 export { User };
