@@ -1,5 +1,3 @@
-const env = process.env.NODE_ENV || "development";
-
 import express from "express";
 import bodyParser from "body-parser";
 
@@ -8,11 +6,12 @@ import { Todo } from "./models/todo";
 import { User } from "./models/user";
 import { ObjectID } from "mongodb";
 import _ from "lodash";
+import { authenticate } from "./middleware/authenticate";
 
 const app = express();
 const port = process.env.PORT;
 app.use(bodyParser.json());
-
+//POST /todos
 app.post("/todos", (req, res) => {
   const todo = new Todo({
     text: req.body.text
@@ -24,11 +23,14 @@ app.post("/todos", (req, res) => {
     .catch(err => res.status(400).send(err));
 });
 
+//GET /todos
 app.get("/todos", (req, res) => {
   Todo.find()
     .then(todos => res.send({ todos }))
     .catch(err => res.send(err));
 });
+
+//GET /todos/:id
 app.get("/todos/:id", (req, res) => {
   const id = req.params.id;
   if (!ObjectID.isValid(id)) {
@@ -39,6 +41,7 @@ app.get("/todos/:id", (req, res) => {
     .catch(err => res.status(400).send(`404 not found`));
 });
 
+//DELETE /todos/:id
 app.delete("/todos/:id", (req, res) => {
   const id = req.params.id;
 
@@ -51,6 +54,7 @@ app.delete("/todos/:id", (req, res) => {
     .catch(err => res.status(400).send(`404 not found`));
 });
 
+//PATCH /todos:id
 app.patch("/todos/:id", (req, res) => {
   const id = req.params.id;
   const body = _.pick(req.body, ["text", "completed"]);
@@ -71,6 +75,7 @@ app.patch("/todos/:id", (req, res) => {
     .catch(err => res.status(400).send());
 });
 
+//POST /users
 app.post("/users", (req, res) => {
   const body = _.pick(req.body, ["email", "password"]);
   const user = new User({
@@ -80,10 +85,20 @@ app.post("/users", (req, res) => {
 
   user
     .save()
-    .then(result => res.send(result))
+    .then(() => user.generateAuthToken())
+    .then(token =>
+      res.header("x-auth", token).send({ _id: user.id, email: user.email })
+    )
     .catch(err => res.status(400).send(err));
 });
 
+//GET /users/me
+app.get("/users/me", authenticate, (req, res) => {
+  //we will sent only the user _id and email
+  res.send({ _id: req.user.id, email: req.user.email });
+});
+
+//CONNECT TO THE PORT
 app.listen(port, () => console.log(`Started up at port ${port}!`));
 
-export { app, env };
+export { app };
