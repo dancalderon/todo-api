@@ -69,6 +69,20 @@ UserSchema.statics.findByToken = function(token) {
   });
 };
 
+UserSchema.statics.findByCredentials = async function(email, password) {
+  // to avoid problems with the const names, we are going to use this by it self
+  const user = await this.findOne({ email });
+  if (!user) return Promise.reject();
+  try {
+    // If we omitt the callback in bcrypt.compare, this will return a promise
+    const pass = await bcrypt.compare(password, user.password);
+    // If the compare was successful, we will get a true return
+    if (pass) return user;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // middleware that will run some code before the event
 UserSchema.pre('save', function(next) {
   const user = this;

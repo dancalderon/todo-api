@@ -95,6 +95,20 @@ app.get('/users/me', authenticate, (req, res) => {
   res.send(req.user);
 });
 
+// POST /users/login {email, password}
+app.post('/users/login', async (req, res) => {
+  // this is the vanilla es6 alternative to _.pick
+  const { email, password } = req.body;
+  // const body = _.pick(req.body, ['email', 'password']);
+  try {
+    const user = await User.findByCredentials(email, password);
+    const token = await user.generateAuthToken();
+    res.header('x-auth', token).send(user);
+  } catch (error) {
+    res.status(400).send();
+  }
+});
+
 // CONNECT TO THE PORT
 app.listen(port, () => console.log(`Started up at port ${port}!`));
 
