@@ -63,7 +63,6 @@ describe('GET /todos/:id', () => {
       .end(done);
   });
   it(`"Should return 404 if todo not found"`, done => {
-    const hexID = new ObjectID().toHexString();
     request(app)
       .get(`/todos/${'5c71e55b3ababe21d074ec9a'}`)
       .expect(404)
@@ -137,5 +136,80 @@ describe('PATCH /todos/:id', () => {
         expect(res.body.todo.completedAt).toBeNull();
       })
       .end(done);
+  });
+});
+
+describe('GET /users/me', () => {
+  it('should return user if authenticated', async () => {
+    try {
+      await request(app)
+        .get('/users/me')
+        // set takes 2 args, header name and value
+        .set('x-auth', users[0].tokens[0].token)
+        .expect(200)
+        .expect(res => {
+          expect(res.body._id).toBe(users[0]._id.toHexString());
+          expect(res.body.email).toBe(users[0].email);
+        });
+    } catch (error) {
+      throw error;
+    }
+  });
+  it('should return 404 if not authenticated', async () => {
+    try {
+      await request(app)
+        .get('/users/me')
+        .expect(401)
+        .expect(res => expect(res.body).toEqual({}));
+    } catch (error) {
+      throw error;
+    }
+  });
+});
+
+describe('POST /users', () => {
+  it('Should create a user', async () => {
+    const [email, password] = ['example@example.com', '123mnb@'];
+    try {
+      await request(app)
+        .post('/users')
+        .send({ email, password })
+        .expect(200)
+        .expect(res => {
+          expect(res.headers['x-auth']).toBeTruthy();
+          expect(res.body._id).toBeTruthy();
+          expect(res.body.email).toBe(email);
+        });
+      const found = await User.findOne({ email });
+      expect(found).toBeTruthy();
+      expect(found.password).not.toBe(password);
+    } catch (error) {
+      throw error;
+    }
+  });
+
+  it('should return validation erros if request invalid', async () => {
+    try {
+      await request(app)
+        .post('/users')
+        .send({ email: 'and', password: '123' })
+        .expect(400);
+    } catch (error) {
+      throw error;
+    }
+  });
+
+  it('should not create user if email in use', async () => {
+    try {
+      await request(app)
+        .post('/users')
+        .send({
+          email: users[0].email,
+          password: 'Password123',
+        })
+        .expect(400);
+    } catch (error) {
+      throw error;
+    }
   });
 });
